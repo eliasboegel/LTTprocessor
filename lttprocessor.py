@@ -82,7 +82,7 @@ def generate_plot_cp(dirpath):
         if (file == "cp_test.txt"):
             path = os.path.join(root, file)
             print(f"Processing {path}")
-            data = numpy.genfromtxt(path, "\t")
+            data = numpy.genfromtxt(path, dtype = numpy.dtype(str), delimiter = "\t").T
 
             # Plotting example of a pressure distribution (cp file)
             # Reynolds number can be accessed with data[dataset, 0]
@@ -111,7 +111,7 @@ def generate_plot_sensor(dirpath):
         if (file == "press_test.txt"):
             path = os.path.join(root, file)
             print(f"Processing {path}")
-            data = numpy.genfromtxt(os.path.join(root, file), "\t")
+            data = numpy.genfromtxt(os.path.join(root, file), dtype = numpy.dtype(str), delimiter = "\t").T
 
             # Plotting example of data in the press file
             y_dataset = 4 # Column number of the desired data set in the press file, for example 4 when y-axis is lift coefficient
@@ -145,9 +145,9 @@ for root, dirs, files in os.walk(windtunnel_folder):
     #print((len(path) - 1) * '/', os.path.basename(root))
     #print(root)
 
-    generate_plot_thermal(root)
-    #generate_plot_cp(root)
-    #generate_plot_sensor(root)
+    #generate_plot_thermal(root)
+    generate_plot_cp(root)
+    generate_plot_sensor(root)
 
     #for file in files:
     #    print(len(path) * '/', file)
