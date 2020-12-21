@@ -24,7 +24,7 @@ def generate_plot_thermal(dirpath):
                 # Read the csv file and create array from it
                 temperature_array = numpy.genfromtxt(os.path.join(root, file), dtype = numpy.float, delimiter = ";")
             else:
-                break
+                #break
                 # Read the csv file and add array results to previous ones
                 add = numpy.genfromtxt(os.path.join(root, file), dtype = numpy.float, delimiter = ";")
                 temperature_array = temperature_array + add
@@ -33,11 +33,10 @@ def generate_plot_thermal(dirpath):
 
     if filecounter > 1:
         # Average temperatures
-        #temperature_array = temperature_array / filecounter
+        temperature_array = temperature_array / filecounter
 
         # Create mask to cut out wing
         wingshape = [(209,0),(485,0),(470,472),(404,476),(470,472),(324,472),(199,469)]
-        #wingshape = [(300,0),(320,0),(320,20),(300,20)]
         x_min = min(wingshape)[0]
         x_max = max(wingshape)[0]
         y_min = min(wingshape,key=operator.itemgetter(1))[1]
@@ -51,20 +50,17 @@ def generate_plot_thermal(dirpath):
         masked_temperature_array = numpy.ma.array(temperature_array, mask = numpy.logical_not(wingmask))
         trimmed_masked_temperature_array = numpy.fliplr(masked_temperature_array[y_min:y_max, x_min:x_max])
 
-        #tr = transforms.Affine2D().rotate_deg(0)
 
         pyplot.imshow(trimmed_masked_temperature_array, cmap = 'jet')
         cb = pyplot.colorbar()
         cb.set_label('°C', rotation = 0)
         #pyplot.show()
         ax = pyplot.gca()
-        #ax.set_xticks(numpy.arange(x_min, x_max, 25))
-        #ax.set_xticklabels(numpy.arange(0, 100, 25))
         
         ax.yaxis.set_major_formatter(ticker.NullFormatter())
         ax.xaxis.set_major_formatter(ticker.PercentFormatter(x_max - x_min))
         ax.xaxis.set_major_locator(ticker.LinearLocator(5))
-        
+        ax.set_xlim(left = 0)
         ax.set_xlabel("Chord")
         
 
@@ -94,13 +90,28 @@ def generate_plot_cp(dirpath):
                     
                 if not os.path.exists(targetpath):
                     os.makedirs(targetpath)
+                
+                ax = pyplot.gca()
+                ax.xaxis.set_major_formatter(ticker.PercentFormatter(100))
+                ax.xaxis.set_major_locator(ticker.LinearLocator(5))
+                ax.set_xlim(left = 0, right = 100)
+                ax.set_xlabel("Chord")
+                ax.set_ylabel("C_p", rotation = 0)
 
-                pyplot.xlabel(data[0][1])
-                pyplot.ylabel("C_p")
+                ax.spines['left'].set_position('zero')
+                ax.spines['right'].set_color('none')
+                ax.spines['bottom'].set_position('zero')
+                ax.spines['top'].set_color('none')
+                ax.xaxis.set_label_coords(1.15 * max(data[0, 2:].astype(numpy.float, casting = "unsafe")), 0, transform = ax.transData)
+                ax.yaxis.set_label_coords(0, 1.15 * max(data[dataset, 2:].astype(numpy.float, casting = "unsafe")), transform = ax.transData)
+
+                for xlabel in ax.get_xticklabels():
+                    xlabel.set_horizontalalignment("left")
+                for ylabel in ax.get_yticklabels():
+                    ylabel.set_verticalalignment("bottom")
+
                 pyplot.plot(data[0, 2:].astype(numpy.float, casting = "unsafe"), data[dataset, 2:].astype(numpy.float, casting = "unsafe"))
-                Re = data[dataset, 0].astype(numpy.int, casting = "unsafe")
-                AoA = int(round(data[dataset, 1].astype(numpy.float, casting = "unsafe")))
-                pyplot.savefig(os.path.join(targetpath, f"Re{Re}_AoA{AoA}.png"))
+                pyplot.savefig(os.path.join(targetpath, f"Re{data[dataset, 0].astype(numpy.int, casting = 'unsafe')}_AoA{round(data[dataset, 1].astype(numpy.float, casting = 'unsafe'),1)}.png"), transparent = True, dpi = 300, bbox_inches='tight')
                 pyplot.clf()
     
 def generate_plot_sensor(dirpath):
@@ -112,20 +123,33 @@ def generate_plot_sensor(dirpath):
             path = os.path.join(root, file)
             print(f"Processing {path}")
             data = numpy.genfromtxt(os.path.join(root, file), dtype = numpy.dtype(str), delimiter = "\t").T
+             
+            # Format: (x_column, y_column)
+            plot_columns = [(3,4), (2,4), (2,3), (2,4), (2,5), (2,6), (2,7)]
 
-            # Plotting example of data in the press file
-            y_dataset = 4 # Column number of the desired data set in the press file, for example 4 when y-axis is lift coefficient
-            x_dataset = 2 # Column number of the desired data set in the press file, for example 2 when x-axis is Angle of Attack
-                
-            targetpath = os.path.join(root, "plots")
-            if not os.path.exists(targetpath):
-                os.makedirs(targetpath)
+            for column_combo in plot_columns:
+                targetpath = os.path.join(root, "plots")
+                if not os.path.exists(targetpath):
+                    os.makedirs(targetpath)
 
-            pyplot.xlabel(data[x_dataset - 1][0])
-            pyplot.ylabel(data[y_dataset - 1][0])
-            pyplot.plot(data[x_dataset - 1, 2:].astype(numpy.float, casting = "unsafe"), data[y_dataset - 1, 2:].astype(numpy.float, casting = "unsafe"))#
-            pyplot.savefig(os.path.join(targetpath, f"{data[y_dataset - 1][0]}_{data[x_dataset - 1][0]}.png"))
-            pyplot.clf()
+                ax = pyplot.gca()
+                pyplot.xlabel(data[column_combo[0] - 1][0], rotation = 0)
+                pyplot.ylabel(data[column_combo[1] - 1][0], rotation = 0)
+                ax.spines['left'].set_position("zero")
+                ax.spines['right'].set_color("none")
+                ax.spines['bottom'].set_position("zero")
+                ax.spines['top'].set_color("none")
+                ax.xaxis.set_label_coords(1.15 * max(data[column_combo[0] - 1, 2:].astype(numpy.float, casting = "unsafe")), 0, transform = ax.transData)
+                ax.yaxis.set_label_coords(0, 1.15 * max(data[column_combo[1] - 1, 2:].astype(numpy.float, casting = "unsafe")), transform = ax.transData)
+
+                for xlabel in ax.get_xticklabels():
+                    xlabel.set_horizontalalignment("left")
+                for ylabel in ax.get_yticklabels():
+                    ylabel.set_verticalalignment("bottom")
+
+                pyplot.plot(data[column_combo[0] - 1, 2:].astype(numpy.float, casting = "unsafe"), data[column_combo[1] - 1, 2:].astype(numpy.float, casting = "unsafe"))
+                pyplot.savefig(os.path.join(targetpath, f"{data[column_combo[1] - 1][0]}_{data[column_combo[0] - 1][0]}.png"), transparent = True, dpi = 300, bbox_inches='tight')
+                pyplot.clf()
       
       
 
@@ -141,16 +165,10 @@ start = timeit.default_timer()
 
 # traverse root directory, and list directories as dirs and files as files
 for root, dirs, files in os.walk(windtunnel_folder):
-    #path = root.split(os.sep)
-    #print((len(path) - 1) * '/', os.path.basename(root))
-    #print(root)
 
-    #generate_plot_thermal(root)
+    generate_plot_thermal(root)
     generate_plot_cp(root)
     generate_plot_sensor(root)
-
-    #for file in files:
-    #    print(len(path) * '/', file)
 
 end = timeit.default_timer()
 time = end - start
