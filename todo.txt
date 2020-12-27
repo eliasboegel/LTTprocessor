@@ -1,0 +1,10 @@
+- DONE color hystersis lines on coeff plots (single and comp) differently from normal lines
+- 3d numerical cp plots and combination plots
+- DONE rename "numerical data" to "numerical prediction" or "LLT prediction" / "VLM prediction"
+- DONE mark individual data points
+- check legend placement (perhaps put it under the graph?)
+- DONE add grid?
+- KINDA DONE check ticks (format / spacing)
+- DONE Have different labels for 2D and 3D case, i.e. Cl vs CL, Cd vs CD
+- DONE flip vertical axis for cp plots?
+- add Re to plots where relevant

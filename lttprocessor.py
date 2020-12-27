@@ -8,6 +8,8 @@ def generate_plot_thermal(dir, outputdir, prefix):
         os.makedirs(outputdir)
 
     for root, dirs, files in os.walk(dir):
+        print(f"Processing {root}")
+        
         # Declare temperature array
         temperature_array = 0
 
@@ -21,7 +23,6 @@ def generate_plot_thermal(dir, outputdir, prefix):
             test = file.rsplit(".", 1)
             if (test[-1] == "csv"):
                 path = os.path.join(dir, file)
-                print(f"Processing {path}")
 
                 # If file is first file that is read
                 if not (filecounter > 1):
@@ -37,6 +38,10 @@ def generate_plot_thermal(dir, outputdir, prefix):
         if filecounter > 1:
             # Average temperatures
             temperature_array = temperature_array / filecounter
+
+            T_max = numpy.nanmax(temperature_array)
+            T_min = numpy.nanmin(temperature_array)
+            T_range = T_max - T_min
 
             # Create mask to cut out wing
             wingshape = [(209,0),(485,0),(470,472),(404,476),(470,472),(324,472),(199,469)]
@@ -65,8 +70,23 @@ def generate_plot_thermal(dir, outputdir, prefix):
             ax.set_xlim(left = 0)
             ax.set_xlabel(r"c [-]")
         
+            pyplot.savefig(os.path.join(outputdir, f"{prefix}_{os.path.basename(os.path.normpath(root))}_highrange.png"), transparent = True, dpi = 300, bbox_inches='tight')
+            pyplot.clf()
 
-            pyplot.savefig(os.path.join(outputdir, f"{prefix}_{os.path.basename(os.path.normpath(root))}.png"), transparent = True, dpi = 300)
+            pyplot.imshow(trimmed_masked_temperature_array, cmap = 'jet', vmin = T_min + 0.7 * T_range, vmax = T_max)
+            cb = pyplot.colorbar()
+            cb.set_label(r"T [°C]", rotation = 0, labelpad=30)
+            ax = pyplot.gca()
+        
+            ax.yaxis.set_major_formatter(ticker.NullFormatter())
+            ax.xaxis.set_major_formatter(ticker.PercentFormatter(x_max - x_min))
+            ax.xaxis.set_major_locator(ticker.LinearLocator(5))
+            ax.set_xlim(left = 0)
+            ax.set_xlabel(r"c [-]")
+            
+            pyplot.savefig(os.path.join(outputdir, f"{prefix}_{os.path.basename(os.path.normpath(root))}_lowrange.png"), transparent = True, dpi = 300, bbox_inches='tight')
+
+
             pyplot.clf()
 
 
@@ -78,7 +98,7 @@ def generate_data_exp_cp(path):
 
     data = numpy.genfromtxt(path, dtype = numpy.dtype(str), delimiter = "\t").T
 
-    # Add last column that contains 1 if data point is a hystersis data point and 0 if it isn't
+    # Add last column that contains 1 if data point is a hysteresis data point and 0 if it isn't
     output_arr = numpy.empty_like(data, shape = (data.shape[0], data.shape[1] + 1))
     output_arr[:,:-1] = data
 
@@ -125,7 +145,7 @@ def generate_plot_cp(data, outputdir, prefix):
         os.makedirs(outputdir)
 
     # Check if data is numerical or experimental to get correct file names later
-    hystersis_prefix = ""
+    hysteresis_prefix = ""
     is_exp = 0
     if (data[0,0].strip() == "Re"):
         is_exp = 1
@@ -136,23 +156,34 @@ def generate_plot_cp(data, outputdir, prefix):
         
         if (is_exp):
             if(int(data[dataset,-1])):
-                hystersis_prefix = "h"
+                hysteresis_prefix = "h"
 
         ax = pyplot.gca()
         ax.xaxis.set_major_formatter(ticker.PercentFormatter(1))
         ax.xaxis.set_major_locator(ticker.LinearLocator(5))
-        ax.set_xlim(left = 0, right = 1)
         ax.set_xlabel(r"c [-]")
         ax.set_ylabel(r"$C_p$ [-]", rotation = 0)
+        ax.invert_yaxis()
 
         ax.spines['left'].set_position('zero')
         ax.spines['right'].set_color('none')
         ax.spines['bottom'].set_position('zero')
         ax.spines['top'].set_color('none')
-        x_max = max(data[0, 2:data.shape[1]-is_exp].astype(numpy.float, casting = "unsafe") / data[0, 2].astype(numpy.float, casting = "unsafe"))
-        x_min = min(data[0, 2:data.shape[1]-is_exp].astype(numpy.float, casting = "unsafe") / data[0, 2].astype(numpy.float, casting = "unsafe"))
-        y_max = max(data[dataset, 2:data.shape[1]-is_exp].astype(numpy.float, casting = "unsafe"))
-        y_min = min(data[dataset, 2:data.shape[1]-is_exp].astype(numpy.float, casting = "unsafe"))
+
+
+        pyplot.plot(data[0, 2:data.shape[1]-is_exp].astype(numpy.float, casting = "unsafe") / data[0, 2].astype(numpy.float, casting = "unsafe"), data[dataset, 2:data.shape[1]-is_exp].astype(numpy.float, casting = "unsafe"), marker = ".")
+        pyplot.grid()
+        
+
+        #pyplot.rcParams['axes.autolimit_mode'] = 'round_numbers'
+        #ax.set_xlim(left = 0, right = 1)
+        #x_max = max(data[0, 2:data.shape[1]-is_exp].astype(numpy.float, casting = "unsafe") / data[0, 2].astype(numpy.float, casting = "unsafe"))
+        #x_min = min(data[0, 2:data.shape[1]-is_exp].astype(numpy.float, casting = "unsafe") / data[0, 2].astype(numpy.float, casting = "unsafe"))
+        #y_max = max(data[dataset, 2:data.shape[1]-is_exp].astype(numpy.float, casting = "unsafe"))
+        #y_min = min(data[dataset, 2:data.shape[1]-is_exp].astype(numpy.float, casting = "unsafe"))
+        x_min, x_max = ax.get_xlim()
+        y_min, y_max = ax.get_ylim()
+
         ax.xaxis.set_label_coords(x_max + 0.15 * (x_max - x_min), 0, transform = ax.transData)
         ax.yaxis.set_label_coords(0, y_max + 0.1 * (y_max - y_min), transform = ax.transData)
 
@@ -161,14 +192,16 @@ def generate_plot_cp(data, outputdir, prefix):
         for ylabel in ax.get_yticklabels():
             ylabel.set_verticalalignment("bottom")
 
-
-        pyplot.plot(data[0, 2:data.shape[1]-is_exp].astype(numpy.float, casting = "unsafe") / data[0, 2].astype(numpy.float, casting = "unsafe"), data[dataset, 2:data.shape[1]-is_exp].astype(numpy.float, casting = "unsafe"))
-        pyplot.savefig(os.path.join(outputdir, f"{prefix}_AoA{hystersis_prefix}{round(float(data[dataset, is_exp].strip()),1)}.png"), transparent = True, dpi = 300, bbox_inches='tight')
+        pyplot.savefig(os.path.join(outputdir, f"{prefix}_AoA{hysteresis_prefix}{round(float(data[dataset, is_exp].strip()),1)}.png"), transparent = True, dpi = 300, bbox_inches='tight')
         pyplot.clf()
 
 def generate_plot_comp_cp(data_exp, data_num, outputdir, prefix):
     if not os.path.exists(outputdir):
         os.makedirs(outputdir)
+
+    num_data_label = r"LLT Prediction"
+    if "3D" in prefix:
+        num_data_label = r"VLM Prediction"
 
     # Produce graph of all datasets in the file
     for dataset in range(1, data_num.shape[0]):
@@ -183,18 +216,31 @@ def generate_plot_comp_cp(data_exp, data_num, outputdir, prefix):
         ax = pyplot.gca()
         ax.xaxis.set_major_formatter(ticker.PercentFormatter(1))
         ax.xaxis.set_major_locator(ticker.LinearLocator(5))
-        ax.set_xlim(left = 0, right = 1)
         ax.set_xlabel(r"c [-]")
         ax.set_ylabel(r"$C_p$ [-]", rotation = 0)
+        ax.invert_yaxis()
 
         ax.spines['left'].set_position('zero')
         ax.spines['right'].set_color('none')
         ax.spines['bottom'].set_position('zero')
         ax.spines['top'].set_color('none')
-        x_max = max(max(data_exp[0, 2:-1].astype(numpy.float, casting = "unsafe")), max(data_num[0, 2:].astype(numpy.float, casting = "unsafe"))) / max(data_exp[0, 2].astype(numpy.float, casting = "unsafe"), data_num[0, 2].astype(numpy.float, casting = "unsafe"))
-        x_min = min(min(data_exp[0, 2:-1].astype(numpy.float, casting = "unsafe")), min(data_num[0, 2:].astype(numpy.float, casting = "unsafe"))) / min(data_exp[0, 2].astype(numpy.float, casting = "unsafe"), data_num[0, 2].astype(numpy.float, casting = "unsafe"))
-        y_max = max(max(data_exp[dataset_exp, 2:-1].astype(numpy.float, casting = "unsafe")), max(data_num[dataset, 2:].astype(numpy.float, casting = "unsafe")))
-        y_min = min(min(data_exp[dataset_exp, 2:-1].astype(numpy.float, casting = "unsafe")), min(data_num[dataset, 2:].astype(numpy.float, casting = "unsafe")))
+
+
+        exp_plot, = pyplot.plot(data_exp[0, 2:-1].astype(numpy.float, casting = "unsafe") / data_exp[0, 2].astype(numpy.float, casting = "unsafe"), data_exp[dataset_exp, 2:-1].astype(numpy.float, casting = "unsafe"), label = "Experimental data", marker = ".")
+        num_plot, = pyplot.plot(data_num[0, 2:].astype(numpy.float, casting = "unsafe"), data_num[dataset, 2:].astype(numpy.float, casting = "unsafe"), label = num_data_label, marker = "D", markersize = 4)
+
+        pyplot.legend(handles=[exp_plot, num_plot], bbox_to_anchor=(1.05, 1), loc='upper left', framealpha=0.0)
+        pyplot.grid()
+
+        #pyplot.rcParams['axes.autolimit_mode'] = 'round_numbers'
+        ax.set_xlim(left = 0, right = 1)
+        #x_max = max(max(data_exp[0, 2:-1].astype(numpy.float, casting = "unsafe")), max(data_num[0, 2:].astype(numpy.float, casting = "unsafe"))) / max(data_exp[0, 2].astype(numpy.float, casting = "unsafe"), data_num[0, 2].astype(numpy.float, casting = "unsafe"))
+        #x_min = min(min(data_exp[0, 2:-1].astype(numpy.float, casting = "unsafe")), min(data_num[0, 2:].astype(numpy.float, casting = "unsafe"))) / min(data_exp[0, 2].astype(numpy.float, casting = "unsafe"), data_num[0, 2].astype(numpy.float, casting = "unsafe"))
+        #y_max = max(max(data_exp[dataset_exp, 2:-1].astype(numpy.float, casting = "unsafe")), max(data_num[dataset, 2:].astype(numpy.float, casting = "unsafe")))
+        #y_min = min(min(data_exp[dataset_exp, 2:-1].astype(numpy.float, casting = "unsafe")), min(data_num[dataset, 2:].astype(numpy.float, casting = "unsafe")))
+        x_min, x_max = ax.get_xlim()
+        y_min, y_max = ax.get_ylim()
+
         ax.xaxis.set_label_coords(x_max + 0.15 * (x_max - x_min), 0, transform = ax.transData)
         ax.yaxis.set_label_coords(0, y_max + 0.1 * (y_max - y_min), transform = ax.transData)
 
@@ -203,10 +249,7 @@ def generate_plot_comp_cp(data_exp, data_num, outputdir, prefix):
         for ylabel in ax.get_yticklabels():
             ylabel.set_verticalalignment("bottom")
 
-        exp_plot, = pyplot.plot(data_exp[0, 2:-1].astype(numpy.float, casting = "unsafe") / data_exp[0, 2].astype(numpy.float, casting = "unsafe"), data_exp[dataset_exp, 2:-1].astype(numpy.float, casting = "unsafe"), label = "Experimental data")
-        num_plot, = pyplot.plot(data_num[0, 2:].astype(numpy.float, casting = "unsafe"), data_num[dataset, 2:].astype(numpy.float, casting = "unsafe"), label = "Numerical data")
-
-        pyplot.legend(handles=[exp_plot, num_plot], bbox_to_anchor=(1.05, 1), loc='upper left', framealpha=0.0)
+        
         pyplot.savefig(os.path.join(outputdir, f"{prefix}_AoA{round(float(data_num[dataset, 0].strip()),1)}.png"), transparent = True, dpi = 300, bbox_inches='tight')
         pyplot.clf()
 
@@ -225,7 +268,7 @@ def generate_data_exp_coeff(path):
     output_arr[2] = data[2].astype(numpy.float, casting = "unsafe") # CD
     output_arr[3] = data[4].astype(numpy.float, casting = "unsafe") # CM
 
-    # Add last column that contains 1 if data point is a hystersis data point and 0 if it isn't
+    # Add last column that contains 1 if data point is a hysteresis data point and 0 if it isn't
     highest_aoa = float(output_arr[0,0])
     for row in range(1, output_arr.shape[1]):
         if (float(output_arr[0, row]) >= highest_aoa):
@@ -257,6 +300,12 @@ def generate_plot_coeff(data, outputdir, prefix):
     plot_columns = [(2,1), (0,1), (0,2), (0,3)]
     column_names = ["alpha", "Cl", "Cd", "Cm"]
     column_symbols = [r"$\alpha$ [$^\circ$]", r"$C_l$ [-]", r"$C_d$ [-]", r"$C_m$ [-]"]
+    if "3D" in prefix:
+        column_symbols = [r"$\alpha$ [$^\circ$]", r"$C_L$ [-]", r"$C_D$ [-]", r"$C_M$ [-]"]
+
+    is_exp = 0
+    if (data.shape[0] > 4):
+        is_exp = 1
 
     for column_combo in plot_columns:
         ax = pyplot.gca()
@@ -266,10 +315,30 @@ def generate_plot_coeff(data, outputdir, prefix):
         ax.spines['right'].set_color("none")
         ax.spines['bottom'].set_position("zero")
         ax.spines['top'].set_color("none")
-        x_max = max(data[column_combo[0],:])
-        x_min = min(data[column_combo[0],:])
-        y_max = max(data[column_combo[1],:])
-        y_min = min(data[column_combo[1],:])
+
+        
+        if (is_exp):
+            data_split = numpy.hsplit(data, numpy.where(numpy.diff(data[4]))[0])
+            data_norm = numpy.hsplit(data, numpy.where(numpy.diff(data[4]))[0] + 1)[0]
+            data_hysteresis = numpy.hsplit(data, numpy.where(numpy.diff(data[4]))[0])[1]
+
+            norm_plot, = pyplot.plot(data_norm[column_combo[0],:], data_norm[column_combo[1],:], label = r"increasing $\alpha$", marker = ".")
+            hysteresis_plot, = pyplot.plot(data_hysteresis[column_combo[0],:], data_hysteresis[column_combo[1],:], label = r"decreasing $\alpha$", marker = "^", markersize = 4)
+            pyplot.legend(handles=[norm_plot, hysteresis_plot], bbox_to_anchor=(1.05, 1), loc='upper left', framealpha=0.0)
+        else:
+            pyplot.plot(data[column_combo[0],:], data[column_combo[1],:], marker = "D", markersize = 4)
+
+        pyplot.grid()
+
+        #pyplot.rcParams['axes.autolimit_mode'] = 'round_numbers'
+        #x_max = max(data[column_combo[0],:])
+        #x_min = min(data[column_combo[0],:])
+        #y_max = max(data[column_combo[1],:])
+        #y_min = min(data[column_combo[1],:])
+        x_min, x_max = ax.get_xlim()
+        y_min, y_max = ax.get_ylim()
+
+
         ax.xaxis.set_label_coords(x_max + 0.15 * (x_max - x_min), 0, transform = ax.transData)
         ax.yaxis.set_label_coords(0, y_max + 0.1 * (y_max - y_min), transform = ax.transData)
 
@@ -278,7 +347,6 @@ def generate_plot_coeff(data, outputdir, prefix):
         for ylabel in ax.get_yticklabels():
             ylabel.set_verticalalignment("bottom")
 
-        pyplot.plot(data[column_combo[0],:], data[column_combo[1],:])
         pyplot.savefig(os.path.join(outputdir, f"{prefix}_{column_names[column_combo[1]]}-{column_names[column_combo[0]]}.png"), transparent = True, dpi = 300, bbox_inches='tight')
         pyplot.clf()
 
@@ -286,10 +354,16 @@ def generate_plot_comp_coeff(data_exp, data_num, outputdir, prefix):
     if not os.path.exists(outputdir):
         os.makedirs(outputdir)
     
+    num_data_label = r"LLT Prediction"
+    if "3D" in prefix:
+        num_data_label = r"VLM Prediction"
+
     # Format: (x_column, y_column)
     plot_columns = [(2,1), (0,1), (0,2), (0,3)]
     column_names = ["alpha", "Cl", "Cd", "Cm"]
     column_symbols = [r"$\alpha$ [$^\circ$]", r"$C_l$ [-]", r"$C_d$ [-]", r"$C_m$ [-]"]
+    if "3D" in prefix:
+        column_symbols = [r"$\alpha$ [$^\circ$]", r"$C_L$ [-]", r"$C_D$ [-]", r"$C_M$ [-]"]
 
     for column_combo in plot_columns:
         ax = pyplot.gca()
@@ -299,10 +373,29 @@ def generate_plot_comp_coeff(data_exp, data_num, outputdir, prefix):
         ax.spines['right'].set_color("none")
         ax.spines['bottom'].set_position("zero")
         ax.spines['top'].set_color("none")
-        x_max = max(max(data_exp[column_combo[0]]), max(data_num[column_combo[0]]))
-        x_min = min(min(data_exp[column_combo[0]]), min(data_num[column_combo[0]]))
-        y_max = max(max(data_exp[column_combo[1]]), max(data_num[column_combo[1]]))
-        y_min = min(min(data_exp[column_combo[1]]), min(data_num[column_combo[1]]))
+
+
+        data_exp_split = numpy.hsplit(data_exp, numpy.where(numpy.diff(data_exp[4]))[0])
+        data_exp_norm = numpy.hsplit(data_exp, numpy.where(numpy.diff(data_exp[4]))[0] + 1)[0]
+        data_exp_hysteresis = numpy.hsplit(data_exp, numpy.where(numpy.diff(data_exp[4]))[0])[1]
+
+        exp_plot_norm, = pyplot.plot(data_exp_norm[column_combo[0],:], data_exp_norm[column_combo[1],:], label = r"Experimental data (increasing $\alpha$)", marker = ".")
+        exp_plot_hysteresis, = pyplot.plot(data_exp_hysteresis[column_combo[0],:], data_exp_hysteresis[column_combo[1],:], label = r"Experimental data (decreasing $\alpha$)", marker = "^", markersize = 4)
+
+        num_plot, = pyplot.plot(data_num[column_combo[0]], data_num[column_combo[1]], label = num_data_label, marker = "D", markersize = 4)
+
+        pyplot.legend(handles=[exp_plot_norm, exp_plot_hysteresis, num_plot], bbox_to_anchor=(1.05, 1), loc='upper left', framealpha=0.0)
+        pyplot.grid()
+
+        #x_max = max(max(data_exp[column_combo[0]]), max(data_num[column_combo[0]]))
+        #x_min = min(min(data_exp[column_combo[0]]), min(data_num[column_combo[0]]))
+        #y_max = max(max(data_exp[column_combo[1]]), max(data_num[column_combo[1]]))
+        #y_min = min(min(data_exp[column_combo[1]]), min(data_num[column_combo[1]]))
+        #pyplot.rcParams['axes.autolimit_mode'] = 'round_numbers'
+        x_min, x_max = ax.get_xlim()
+        y_min, y_max = ax.get_ylim()
+
+
         ax.xaxis.set_label_coords(x_max + 0.15 * (x_max - x_min), 0, transform = ax.transData)
         ax.yaxis.set_label_coords(0, y_max + 0.1 * (y_max - y_min), transform = ax.transData)
 
@@ -311,10 +404,6 @@ def generate_plot_comp_coeff(data_exp, data_num, outputdir, prefix):
         for ylabel in ax.get_yticklabels():
             ylabel.set_verticalalignment("bottom")
 
-        exp_plot, = pyplot.plot(data_exp[column_combo[0]], data_exp[column_combo[1]], label = "Experimental data")
-        num_plot, = pyplot.plot(data_num[column_combo[0]], data_num[column_combo[1]], label = "Numerical data")
-
-        pyplot.legend(handles=[exp_plot, num_plot], bbox_to_anchor=(1.05, 1), loc='upper left', framealpha=0.0)
         pyplot.savefig(os.path.join(outputdir, f"{prefix}_{column_names[column_combo[1]]}-{column_names[column_combo[0]]}.png"), transparent = True, dpi = 300, bbox_inches='tight')
         pyplot.clf()
 
@@ -329,37 +418,37 @@ windtunnel_folder = "D:\courses\windtunnel\AE2130-II G25"
 start = timeit.default_timer()
 
 # Generate 2D plots
-generate_plot_thermal(os.path.join(windtunnel_folder, "2D", "experimental", "thermal"), os.path.join(windtunnel_folder, "2D", "plots", "experimental", "thermal"), "2D_thermal")
+#generate_plot_thermal(os.path.join(windtunnel_folder, "2D", "experimental", "thermal"), os.path.join(windtunnel_folder, "2D", "plots", "experimental", "thermal"), "2D_thermal")
 
-data_exp_cp = generate_data_exp_cp(os.path.join(windtunnel_folder, "2D", "experimental", "cp_test.txt"))
-data_num_cp = generate_data_num_cp(os.path.join(windtunnel_folder, "2D", "numerical", "cp"))
-generate_plot_cp(data_exp_cp, os.path.join(windtunnel_folder, "2D", "plots", "experimental", "cp"), "2D_exp_cp")
-generate_plot_cp(data_num_cp, os.path.join(windtunnel_folder, "2D", "plots", "numerical", "cp"), "2D_num_cp")
-generate_plot_comp_cp(data_exp_cp, data_num_cp, os.path.join(windtunnel_folder, "2D", "plots", "comparison", "cp"), "2D_comp_cp")
+#data_exp_cp = generate_data_exp_cp(os.path.join(windtunnel_folder, "2D", "experimental", "cp_test.txt"))
+#data_num_cp = generate_data_num_cp(os.path.join(windtunnel_folder, "2D", "numerical", "cp"))
+#generate_plot_cp(data_exp_cp, os.path.join(windtunnel_folder, "2D", "plots", "experimental", "cp"), "2D_exp_cp")
+#generate_plot_cp(data_num_cp, os.path.join(windtunnel_folder, "2D", "plots", "numerical", "cp"), "2D_num_cp")
+#generate_plot_comp_cp(data_exp_cp, data_num_cp, os.path.join(windtunnel_folder, "2D", "plots", "comparison", "cp"), "2D_comp_cp")
 
-data_exp_coeff = generate_data_exp_coeff(os.path.join(windtunnel_folder, "2D", "experimental", "press_test.txt"))
-data_num_coeff = generate_data_num_coeff(os.path.join(windtunnel_folder, "2D", "numerical", "NACA642A015_T1_Re0.646_M0.12_N9.0.txt"))
-generate_plot_coeff(data_exp_coeff, os.path.join(windtunnel_folder, "2D", "plots", "experimental"), "2D_exp")
-generate_plot_coeff(data_num_coeff, os.path.join(windtunnel_folder, "2D", "plots", "numerical"), "2D_num")
-generate_plot_comp_coeff(data_exp_coeff, data_num_coeff, os.path.join(windtunnel_folder, "2D", "plots", "comparison"), "2D_comp")
+#data_exp_coeff = generate_data_exp_coeff(os.path.join(windtunnel_folder, "2D", "experimental", "press_test.txt"))
+#data_num_coeff = generate_data_num_coeff(os.path.join(windtunnel_folder, "2D", "numerical", "NACA642A015_T1_Re0.646_M0.12_N9.0.txt"))
+#generate_plot_coeff(data_exp_coeff, os.path.join(windtunnel_folder, "2D", "plots", "experimental"), "2D_exp")
+#generate_plot_coeff(data_num_coeff, os.path.join(windtunnel_folder, "2D", "plots", "numerical"), "2D_num")
+#generate_plot_comp_coeff(data_exp_coeff, data_num_coeff, os.path.join(windtunnel_folder, "2D", "plots", "comparison"), "2D_comp")
 
 
 
 # Generate 3D plots
-generate_plot_thermal(os.path.join(windtunnel_folder, "3D", "experimental", "thermal"), os.path.join(windtunnel_folder, "3D", "plots", "experimental", "thermal"), "3D_thermal")
+#generate_plot_thermal(os.path.join(windtunnel_folder, "3D", "experimental", "thermal"), os.path.join(windtunnel_folder, "3D", "plots", "experimental", "thermal"), "3D_thermal")
 
 # 3D numerical pressure distribution is not done yet
-data_exp_cp = generate_data_exp_cp(os.path.join(windtunnel_folder, "3D", "experimental", "cp_test.txt"))
-#data_num_cp = generate_data_num_cp(os.path.join(windtunnel_folder, "3D", "numerical", "cp"))
-generate_plot_cp(data_exp_cp, os.path.join(windtunnel_folder, "3D", "plots", "experimental", "cp"), "3D_exp_cp")
-#generate_plot_cp(data_num_cp, os.path.join(windtunnel_folder, "3D", "plots", "numerical", "cp"), "3D_num_cp")
+#data_exp_cp = generate_data_exp_cp(os.path.join(windtunnel_folder, "3D", "experimental", "cp_test.txt"))
+data_num_cp = generate_data_num_cp(os.path.join(windtunnel_folder, "3D", "numerical", "cp"))
+#generate_plot_cp(data_exp_cp, os.path.join(windtunnel_folder, "3D", "plots", "experimental", "cp"), "3D_exp_cp")
+generate_plot_cp(data_num_cp, os.path.join(windtunnel_folder, "3D", "plots", "numerical", "cp"), "3D_num_cp")
 #generate_plot_comp_cp(data_exp_cp, data_num_cp, os.path.join(windtunnel_folder, "3D", "plots", "comparison", "cp"), "3D_comp_cp")
 
-data_exp_coeff = generate_data_exp_coeff(os.path.join(windtunnel_folder, "3D", "experimental", "press_test.txt"))
-data_num_coeff = generate_data_num_coeff(os.path.join(windtunnel_folder, "3D", "numerical", "NACA 642A015_T1_Re0.646_M0.12_N9.0.txt"))
-generate_plot_coeff(data_exp_coeff, os.path.join(windtunnel_folder, "3D", "plots", "experimental"), "3D_exp")
-generate_plot_coeff(data_num_coeff, os.path.join(windtunnel_folder, "3D", "plots", "numerical"), "3D_num")
-generate_plot_comp_coeff(data_exp_coeff, data_num_coeff, os.path.join(windtunnel_folder, "3D", "plots", "comparison"), "3D_comp")
+#data_exp_coeff = generate_data_exp_coeff(os.path.join(windtunnel_folder, "3D", "experimental", "press_test.txt"))
+#data_num_coeff = generate_data_num_coeff(os.path.join(windtunnel_folder, "3D", "numerical", "NACA 642A015_T1_Re0.646_M0.12_N9.0.txt"))
+#generate_plot_coeff(data_exp_coeff, os.path.join(windtunnel_folder, "3D", "plots", "experimental"), "3D_exp")
+#generate_plot_coeff(data_num_coeff, os.path.join(windtunnel_folder, "3D", "plots", "numerical"), "3D_num")
+#generate_plot_comp_coeff(data_exp_coeff, data_num_coeff, os.path.join(windtunnel_folder, "3D", "plots", "comparison"), "3D_comp")
 
 
 
