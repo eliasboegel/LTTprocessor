@@ -122,15 +122,32 @@ def generate_data_num_cp(path):
     output_arr = 0
     for file in files:
         filepath = os.path.join(path, file)
-        data = numpy.genfromtxt(filepath, dtype = numpy.dtype(str), skip_header = 5).T
+        if "3D" in path:
+            data_19 = numpy.genfromtxt(filepath, dtype = numpy.dtype(str), skip_header = 551, skip_footer = 513).T
+            data_20 = numpy.genfromtxt(filepath, dtype = numpy.dtype(str), skip_header = 578, skip_footer = 486).T
+            data_midspan = (data_19.astype(numpy.float) + data_20.astype(numpy.float)) * 0.5
+            # data_midspan[1] = data_midspan[1] / 0.24
+            
 
-        if not filecounter:
-            output_arr = numpy.empty_like(data, shape = (len(files) + 1, data.shape[1] + 1))
+
+            if not filecounter:
+                output_arr = numpy.empty_like(data_19, shape = (len(files) + 1, data_19.shape[1] + 1))
+                AoA = file.split("_v", 1)[0].rsplit("a=", 1)[1]
+                output_arr[0] = numpy.concatenate([numpy.array([AoA]), data_midspan[1].astype(numpy.dtype(str))])
+
+            AoA = file.split("_v", 1)[0].rsplit("a=", 1)[1]
+            output_arr[filecounter + 1] = numpy.concatenate([numpy.array([AoA]), data_midspan[-1].astype(numpy.dtype(str))])
+
+        else: # 2D case
+            data = numpy.genfromtxt(filepath, dtype = numpy.dtype(str), skip_header = 5).T
+
+            if not filecounter:
+                output_arr = numpy.empty_like(data, shape = (len(files) + 1, data.shape[1] + 1))
+                AoA = file.split(")", 1)[0].rsplit("(", 1)[1]
+                output_arr[0] = numpy.concatenate([numpy.array([AoA]), data[0]])
+
             AoA = file.split(")", 1)[0].rsplit("(", 1)[1]
-            output_arr[0] = numpy.concatenate([numpy.array([AoA]), data[0]])
-
-        AoA = file.split(")", 1)[0].rsplit("(", 1)[1]
-        output_arr[filecounter + 1] = numpy.concatenate([numpy.array([AoA]), data[1]])
+            output_arr[filecounter + 1] = numpy.concatenate([numpy.array([AoA]), data[1]])
 
         filecounter += 1
         
@@ -176,7 +193,7 @@ def generate_plot_cp(data, outputdir, prefix):
         
 
         #pyplot.rcParams['axes.autolimit_mode'] = 'round_numbers'
-        #ax.set_xlim(left = 0, right = 1)
+        ax.set_xlim(left = 0, right = 1)
         #x_max = max(data[0, 2:data.shape[1]-is_exp].astype(numpy.float, casting = "unsafe") / data[0, 2].astype(numpy.float, casting = "unsafe"))
         #x_min = min(data[0, 2:data.shape[1]-is_exp].astype(numpy.float, casting = "unsafe") / data[0, 2].astype(numpy.float, casting = "unsafe"))
         #y_max = max(data[dataset, 2:data.shape[1]-is_exp].astype(numpy.float, casting = "unsafe"))
@@ -199,7 +216,7 @@ def generate_plot_comp_cp(data_exp, data_num, outputdir, prefix):
     if not os.path.exists(outputdir):
         os.makedirs(outputdir)
 
-    num_data_label = r"LLT Prediction"
+    num_data_label = r"VPM Prediction"
     if "3D" in prefix:
         num_data_label = r"VLM Prediction"
 
@@ -227,7 +244,7 @@ def generate_plot_comp_cp(data_exp, data_num, outputdir, prefix):
 
 
         exp_plot, = pyplot.plot(data_exp[0, 2:-1].astype(numpy.float, casting = "unsafe") / data_exp[0, 2].astype(numpy.float, casting = "unsafe"), data_exp[dataset_exp, 2:-1].astype(numpy.float, casting = "unsafe"), label = "Experimental data", marker = ".")
-        num_plot, = pyplot.plot(data_num[0, 2:].astype(numpy.float, casting = "unsafe"), data_num[dataset, 2:].astype(numpy.float, casting = "unsafe"), label = num_data_label, marker = "D", markersize = 4)
+        num_plot, = pyplot.plot(data_num[0, 2:].astype(numpy.float, casting = "unsafe") / data_num[0, 2].astype(numpy.float, casting = "unsafe"), data_num[dataset, 2:].astype(numpy.float, casting = "unsafe"), label = num_data_label, marker = "D", markersize = 4)
 
         pyplot.legend(handles=[exp_plot, num_plot], bbox_to_anchor=(1.05, 1), loc='upper left', framealpha=0.0)
         pyplot.grid()
@@ -354,7 +371,7 @@ def generate_plot_comp_coeff(data_exp, data_num, outputdir, prefix):
     if not os.path.exists(outputdir):
         os.makedirs(outputdir)
     
-    num_data_label = r"LLT Prediction"
+    num_data_label = r"VPM Prediction"
     if "3D" in prefix:
         num_data_label = r"VLM Prediction"
 
@@ -411,6 +428,73 @@ def generate_plot_comp_coeff(data_exp, data_num, outputdir, prefix):
 
 
 
+def generate_plot_comp_2d3d_coeff(data_2d_exp, data_2d_num, data_3d_exp, data_3d_num, outputdir, prefix):
+    if not os.path.exists(outputdir):
+        os.makedirs(outputdir)
+
+    # Format: (x_column, y_column)
+    plot_columns = [(2,1), (0,1), (0,2), (0,3)]
+    column_names = ["alpha", "Cl", "Cd", "Cm"]
+    #column_symbols = [r"$\alpha$ [$^\circ$]", r"$C_l$ [-]", r"$C_d$ [-]", r"$C_m$ [-]"]
+    column_symbols = [r"$\alpha$ [$^\circ$]", r"$C_L$ [-]", r"$C_D$ [-]", r"$C_M$ [-]"]
+        
+
+    for column_combo in plot_columns:
+        ax = pyplot.gca()
+        pyplot.xlabel(column_symbols[column_combo[0]], rotation = 0)
+        pyplot.ylabel(column_symbols[column_combo[1]], rotation = 0)
+        ax.spines['left'].set_position("zero")
+        ax.spines['right'].set_color("none")
+        ax.spines['bottom'].set_position("zero")
+        ax.spines['top'].set_color("none")
+
+
+        #data_2d_exp_split = numpy.hsplit(data_2d_exp, numpy.where(numpy.diff(data_2d_exp[4]))[0])
+        #data_2d_exp_norm = numpy.hsplit(data_2d_exp, numpy.where(numpy.diff(data_2d_exp[4]))[0] + 1)[0]
+        #data_2d_exp_hysteresis = numpy.hsplit(data_2d_exp, numpy.where(numpy.diff(data_2d_exp[4]))[0])[1]
+
+        #data_3d_exp_split = numpy.hsplit(data_3d_exp, numpy.where(numpy.diff(data_3d_exp[4]))[0])
+        #data_3d_exp_norm = numpy.hsplit(data_3d_exp, numpy.where(numpy.diff(data_3d_exp[4]))[0] + 1)[0]
+        #data_3d_exp_hysteresis = numpy.hsplit(data_3d_exp, numpy.where(numpy.diff(data_3d_exp[4]))[0])[1]
+
+
+        #exp_plot_norm_2d, = pyplot.plot(data_2d_exp_norm[column_combo[0],:], data_2d_exp_norm[column_combo[1],:], label = r"Experimental 2D data (increasing $\alpha$)", marker = ".")
+        exp_plot_norm_2d, = pyplot.plot(data_2d_exp[column_combo[0],:], data_2d_exp[column_combo[1],:], label = r"Experimental 2D data)", marker = ".")
+        #exp_plot_hysteresis_2d, = pyplot.plot(data_2d_exp_hysteresis[column_combo[0],:], data_2d_exp_hysteresis[column_combo[1],:], label = r"Experimental 2D data (decreasing $\alpha$)", marker = "^", markersize = 4)
+        num_plot_2d, = pyplot.plot(data_2d_num[column_combo[0]], data_2d_num[column_combo[1]], label = r"VPM Prediction", marker = "D", markersize = 4)
+
+        #exp_plot_norm_3d, = pyplot.plot(data_3d_exp_norm[column_combo[0],:], data_3d_exp_norm[column_combo[1],:], label = r"Experimental 3D data (increasing $\alpha$)", marker = ".")
+        exp_plot_norm_3d, = pyplot.plot(data_3d_exp[column_combo[0],:], data_3d_exp[column_combo[1],:], label = r"Experimental 3D data", marker = ".")
+        #exp_plot_hysteresis_3d, = pyplot.plot(data_3d_exp_hysteresis[column_combo[0],:], data_3d_exp_hysteresis[column_combo[1],:], label = r"Experimental 3D data (decreasing $\alpha$)", marker = "^", markersize = 4)
+        num_plot_3d, = pyplot.plot(data_3d_num[column_combo[0]], data_3d_num[column_combo[1]], label = r"VLM Prediction", marker = "D", markersize = 4)
+
+        #pyplot.legend(handles=[exp_plot_norm_2d, exp_plot_hysteresis_2d, num_plot_2d, exp_plot_norm_3d, exp_plot_hysteresis_3d, num_plot_3d], bbox_to_anchor=(1.05, 1), loc='upper left', framealpha=0.0)
+        pyplot.legend(handles=[exp_plot_norm_2d, num_plot_2d, exp_plot_norm_3d, num_plot_3d], bbox_to_anchor=(1.05, 1), loc='upper left', framealpha=0.0)
+        pyplot.grid()
+
+        #x_max = max(max(data_exp[column_combo[0]]), max(data_num[column_combo[0]]))
+        #x_min = min(min(data_exp[column_combo[0]]), min(data_num[column_combo[0]]))
+        #y_max = max(max(data_exp[column_combo[1]]), max(data_num[column_combo[1]]))
+        #y_min = min(min(data_exp[column_combo[1]]), min(data_num[column_combo[1]]))
+        #pyplot.rcParams['axes.autolimit_mode'] = 'round_numbers'
+        x_min, x_max = ax.get_xlim()
+        y_min, y_max = ax.get_ylim()
+
+
+        ax.xaxis.set_label_coords(x_max + 0.15 * (x_max - x_min), 0, transform = ax.transData)
+        ax.yaxis.set_label_coords(0, y_max + 0.1 * (y_max - y_min), transform = ax.transData)
+
+        for xlabel in ax.get_xticklabels():
+            xlabel.set_horizontalalignment("left")
+        for ylabel in ax.get_yticklabels():
+            ylabel.set_verticalalignment("bottom")
+
+        pyplot.savefig(os.path.join(outputdir, f"{prefix}_{column_names[column_combo[1]]}-{column_names[column_combo[0]]}.png"), transparent = True, dpi = 300, bbox_inches='tight')
+        pyplot.clf()
+
+
+
+
 
 
 windtunnel_folder = "D:\courses\windtunnel\AE2130-II G25"
@@ -418,40 +502,42 @@ windtunnel_folder = "D:\courses\windtunnel\AE2130-II G25"
 start = timeit.default_timer()
 
 # Generate 2D plots
-#generate_plot_thermal(os.path.join(windtunnel_folder, "2D", "experimental", "thermal"), os.path.join(windtunnel_folder, "2D", "plots", "experimental", "thermal"), "2D_thermal")
+generate_plot_thermal(os.path.join(windtunnel_folder, "2D", "experimental", "thermal"), os.path.join(windtunnel_folder, "plots", "2D", "experimental", "thermal"), "2D_thermal")
 
-#data_exp_cp = generate_data_exp_cp(os.path.join(windtunnel_folder, "2D", "experimental", "cp_test.txt"))
-#data_num_cp = generate_data_num_cp(os.path.join(windtunnel_folder, "2D", "numerical", "cp"))
-#generate_plot_cp(data_exp_cp, os.path.join(windtunnel_folder, "2D", "plots", "experimental", "cp"), "2D_exp_cp")
-#generate_plot_cp(data_num_cp, os.path.join(windtunnel_folder, "2D", "plots", "numerical", "cp"), "2D_num_cp")
-#generate_plot_comp_cp(data_exp_cp, data_num_cp, os.path.join(windtunnel_folder, "2D", "plots", "comparison", "cp"), "2D_comp_cp")
+data_exp_cp_2d = generate_data_exp_cp(os.path.join(windtunnel_folder, "2D", "experimental", "cp_test.txt"))
+data_num_cp_2d = generate_data_num_cp(os.path.join(windtunnel_folder, "2D", "numerical", "cp"))
+generate_plot_cp(data_exp_cp_2d, os.path.join(windtunnel_folder, "plots", "2D", "experimental", "cp"), "2D_exp_cp")
+generate_plot_cp(data_num_cp_2d, os.path.join(windtunnel_folder, "plots", "2D", "numerical", "cp"), "2D_num_cp")
+generate_plot_comp_cp(data_exp_cp_2d, data_num_cp_2d, os.path.join(windtunnel_folder, "plots", "2D", "comparison", "cp"), "2D_comp_cp")
 
-#data_exp_coeff = generate_data_exp_coeff(os.path.join(windtunnel_folder, "2D", "experimental", "press_test.txt"))
-#data_num_coeff = generate_data_num_coeff(os.path.join(windtunnel_folder, "2D", "numerical", "NACA642A015_T1_Re0.646_M0.12_N9.0.txt"))
-#generate_plot_coeff(data_exp_coeff, os.path.join(windtunnel_folder, "2D", "plots", "experimental"), "2D_exp")
-#generate_plot_coeff(data_num_coeff, os.path.join(windtunnel_folder, "2D", "plots", "numerical"), "2D_num")
-#generate_plot_comp_coeff(data_exp_coeff, data_num_coeff, os.path.join(windtunnel_folder, "2D", "plots", "comparison"), "2D_comp")
+data_exp_coeff_2d = generate_data_exp_coeff(os.path.join(windtunnel_folder, "2D", "experimental", "press_test.txt"))
+data_num_coeff_2d = generate_data_num_coeff(os.path.join(windtunnel_folder, "2D", "numerical", "NACA642A015_T1_Re0.646_M0.12_N9.0.txt"))
+generate_plot_coeff(data_exp_coeff_2d, os.path.join(windtunnel_folder, "plots", "2D", "experimental"), "2D_exp")
+generate_plot_coeff(data_num_coeff_2d, os.path.join(windtunnel_folder, "plots", "2D", "numerical"), "2D_num")
+generate_plot_comp_coeff(data_exp_coeff_2d, data_num_coeff_2d, os.path.join(windtunnel_folder, "plots", "2D", "comparison"), "2D_comp")
 
 
 
 # Generate 3D plots
-#generate_plot_thermal(os.path.join(windtunnel_folder, "3D", "experimental", "thermal"), os.path.join(windtunnel_folder, "3D", "plots", "experimental", "thermal"), "3D_thermal")
+generate_plot_thermal(os.path.join(windtunnel_folder, "3D", "experimental", "thermal"), os.path.join(windtunnel_folder, "plots", "3D", "experimental", "thermal"), "3D_thermal")
 
 # 3D numerical pressure distribution is not done yet
-#data_exp_cp = generate_data_exp_cp(os.path.join(windtunnel_folder, "3D", "experimental", "cp_test.txt"))
-data_num_cp = generate_data_num_cp(os.path.join(windtunnel_folder, "3D", "numerical", "cp"))
-#generate_plot_cp(data_exp_cp, os.path.join(windtunnel_folder, "3D", "plots", "experimental", "cp"), "3D_exp_cp")
-generate_plot_cp(data_num_cp, os.path.join(windtunnel_folder, "3D", "plots", "numerical", "cp"), "3D_num_cp")
-#generate_plot_comp_cp(data_exp_cp, data_num_cp, os.path.join(windtunnel_folder, "3D", "plots", "comparison", "cp"), "3D_comp_cp")
+data_exp_cp_3d = generate_data_exp_cp(os.path.join(windtunnel_folder, "3D", "experimental", "cp_test.txt"))
+data_num_cp_3d = generate_data_num_cp(os.path.join(windtunnel_folder, "3D", "numerical", "cp"))
+generate_plot_cp(data_exp_cp_3d, os.path.join(windtunnel_folder, "plots", "3D", "experimental", "cp"), "3D_exp_cp")
+generate_plot_cp(data_num_cp_3d, os.path.join(windtunnel_folder, "plots", "3D", "numerical", "cp"), "3D_num_cp")
+generate_plot_comp_cp(data_exp_cp_3d, data_num_cp_3d, os.path.join(windtunnel_folder, "plots", "3D", "comparison", "cp"), "3D_comp_cp")
 
-#data_exp_coeff = generate_data_exp_coeff(os.path.join(windtunnel_folder, "3D", "experimental", "press_test.txt"))
-#data_num_coeff = generate_data_num_coeff(os.path.join(windtunnel_folder, "3D", "numerical", "NACA 642A015_T1_Re0.646_M0.12_N9.0.txt"))
-#generate_plot_coeff(data_exp_coeff, os.path.join(windtunnel_folder, "3D", "plots", "experimental"), "3D_exp")
-#generate_plot_coeff(data_num_coeff, os.path.join(windtunnel_folder, "3D", "plots", "numerical"), "3D_num")
-#generate_plot_comp_coeff(data_exp_coeff, data_num_coeff, os.path.join(windtunnel_folder, "3D", "plots", "comparison"), "3D_comp")
+data_exp_coeff_3d = generate_data_exp_coeff(os.path.join(windtunnel_folder, "3D", "experimental", "press_test.txt"))
+data_num_coeff_3d = generate_data_num_coeff(os.path.join(windtunnel_folder, "3D", "numerical", "NACA 642A015_T1_Re0.646_M0.12_N9.0.txt"))
+generate_plot_coeff(data_exp_coeff_3d, os.path.join(windtunnel_folder, "plots", "3D", "experimental"), "3D_exp")
+generate_plot_coeff(data_num_coeff_3d, os.path.join(windtunnel_folder, "plots", "3D", "numerical"), "3D_num")
+generate_plot_comp_coeff(data_exp_coeff_3d, data_num_coeff_3d, os.path.join(windtunnel_folder, "plots", "3D", "comparison"), "3D_comp")
 
 
 
+# Generate 2D - 3D comparison plots
+generate_plot_comp_2d3d_coeff(data_exp_coeff_2d, data_num_coeff_2d, data_exp_coeff_3d, data_num_coeff_3d, os.path.join(windtunnel_folder, "plots", "comparison"), "2D3D_comp")
 
 
 

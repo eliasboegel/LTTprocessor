@@ -1,5 +1,5 @@
 - DONE color hystersis lines on coeff plots (single and comp) differently from normal lines
-- 3d numerical cp plots and combination plots
+- DONE 3d numerical cp plots and combination plots
 - DONE rename "numerical data" to "numerical prediction" or "LLT prediction" / "VLM prediction"
 - DONE mark individual data points
 - check legend placement (perhaps put it under the graph?)
