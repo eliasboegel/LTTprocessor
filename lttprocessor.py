@@ -68,8 +68,10 @@ def generate_plot_thermal(dir, outputdir, prefix):
             ax.xaxis.set_major_formatter(ticker.PercentFormatter(x_max - x_min))
             ax.xaxis.set_major_locator(ticker.LinearLocator(5))
             ax.set_xlim(left = 0)
-            ax.set_xlabel(r"c [-]")
+            ax.set_xlabel("c [-] \n Re = 6.5 $\cdot 10^6$")
         
+            #ax.text(0.0, -0.05, r"Re = 6.5 $\cdot 10^6$", verticalalignment='top', horizontalalignment='left', transform=ax.transAxes)
+
             pyplot.savefig(os.path.join(outputdir, f"{prefix}_{os.path.basename(os.path.normpath(root))}_highrange.png"), transparent = True, dpi = 300, bbox_inches='tight')
             pyplot.clf()
 
@@ -82,8 +84,10 @@ def generate_plot_thermal(dir, outputdir, prefix):
             ax.xaxis.set_major_formatter(ticker.PercentFormatter(x_max - x_min))
             ax.xaxis.set_major_locator(ticker.LinearLocator(5))
             ax.set_xlim(left = 0)
-            ax.set_xlabel(r"c [-]")
+            ax.set_xlabel("c [-] \n Re = 6.5 $\cdot 10^6$")
             
+            #ax.text(0.0, -0.05, r"Re = 6.5 $\cdot 10^6$", verticalalignment='top', horizontalalignment='right', transform=ax.transAxes)
+
             pyplot.savefig(os.path.join(outputdir, f"{prefix}_{os.path.basename(os.path.normpath(root))}_lowrange.png"), transparent = True, dpi = 300, bbox_inches='tight')
 
 
@@ -139,14 +143,14 @@ def generate_data_num_cp(path):
             output_arr[filecounter + 1] = numpy.concatenate([numpy.array([AoA]), data_midspan[-1].astype(numpy.dtype(str))])
 
         else: # 2D case
-            data = numpy.genfromtxt(filepath, dtype = numpy.dtype(str), skip_header = 5).T
+            data = numpy.genfromtxt(filepath, dtype = numpy.dtype(str), skip_header = 1).T
 
             if not filecounter:
                 output_arr = numpy.empty_like(data, shape = (len(files) + 1, data.shape[1] + 1))
-                AoA = file.split(")", 1)[0].rsplit("(", 1)[1]
+                AoA = file.split(".", 1)[0].rsplit("aoa", 1)[1]
                 output_arr[0] = numpy.concatenate([numpy.array([AoA]), data[0]])
 
-            AoA = file.split(")", 1)[0].rsplit("(", 1)[1]
+            AoA = file.split(".", 1)[0].rsplit("aoa", 1)[1]
             output_arr[filecounter + 1] = numpy.concatenate([numpy.array([AoA]), data[1]])
 
         filecounter += 1
@@ -209,6 +213,8 @@ def generate_plot_cp(data, outputdir, prefix):
         for ylabel in ax.get_yticklabels():
             ylabel.set_verticalalignment("bottom")
 
+        ax.text(1.0, -0.05, r"Re = 6.5 $\cdot 10^6$", verticalalignment='top', horizontalalignment='right', transform=ax.transAxes)
+
         pyplot.savefig(os.path.join(outputdir, f"{prefix}_AoA{hysteresis_prefix}{round(float(data[dataset, is_exp].strip()),1)}.png"), transparent = True, dpi = 300, bbox_inches='tight')
         pyplot.clf()
 
@@ -246,7 +252,7 @@ def generate_plot_comp_cp(data_exp, data_num, outputdir, prefix):
         exp_plot, = pyplot.plot(data_exp[0, 2:-1].astype(numpy.float, casting = "unsafe") / data_exp[0, 2].astype(numpy.float, casting = "unsafe"), data_exp[dataset_exp, 2:-1].astype(numpy.float, casting = "unsafe"), label = "Experimental data", marker = ".")
         num_plot, = pyplot.plot(data_num[0, 2:].astype(numpy.float, casting = "unsafe") / data_num[0, 2].astype(numpy.float, casting = "unsafe"), data_num[dataset, 2:].astype(numpy.float, casting = "unsafe"), label = num_data_label, marker = "D", markersize = 4)
 
-        pyplot.legend(handles=[exp_plot, num_plot], bbox_to_anchor=(1.05, 1), loc='upper left', framealpha=0.0)
+        pyplot.legend(handles=[exp_plot, num_plot], bbox_to_anchor=(0, 0), loc='upper left', framealpha=0.0)
         pyplot.grid()
 
         #pyplot.rcParams['axes.autolimit_mode'] = 'round_numbers'
@@ -266,7 +272,8 @@ def generate_plot_comp_cp(data_exp, data_num, outputdir, prefix):
         for ylabel in ax.get_yticklabels():
             ylabel.set_verticalalignment("bottom")
 
-        
+        ax.text(1.0, -0.05, r"Re = 6.5 $\cdot 10^6$", verticalalignment='top', horizontalalignment='right', transform=ax.transAxes)
+
         pyplot.savefig(os.path.join(outputdir, f"{prefix}_AoA{round(float(data_num[dataset, 0].strip()),1)}.png"), transparent = True, dpi = 300, bbox_inches='tight')
         pyplot.clf()
 
@@ -341,7 +348,7 @@ def generate_plot_coeff(data, outputdir, prefix):
 
             norm_plot, = pyplot.plot(data_norm[column_combo[0],:], data_norm[column_combo[1],:], label = r"increasing $\alpha$", marker = ".")
             hysteresis_plot, = pyplot.plot(data_hysteresis[column_combo[0],:], data_hysteresis[column_combo[1],:], label = r"decreasing $\alpha$", marker = "^", markersize = 4)
-            pyplot.legend(handles=[norm_plot, hysteresis_plot], bbox_to_anchor=(1.05, 1), loc='upper left', framealpha=0.0)
+            pyplot.legend(handles=[norm_plot, hysteresis_plot], bbox_to_anchor=(0, 0), loc='upper left', framealpha=0.0)
         else:
             pyplot.plot(data[column_combo[0],:], data[column_combo[1],:], marker = "D", markersize = 4)
 
@@ -363,6 +370,8 @@ def generate_plot_coeff(data, outputdir, prefix):
             xlabel.set_horizontalalignment("left")
         for ylabel in ax.get_yticklabels():
             ylabel.set_verticalalignment("bottom")
+
+        ax.text(1.0, -0.05, r"Re = 6.5 $\cdot 10^6$", verticalalignment='top', horizontalalignment='right', transform=ax.transAxes)
 
         pyplot.savefig(os.path.join(outputdir, f"{prefix}_{column_names[column_combo[1]]}-{column_names[column_combo[0]]}.png"), transparent = True, dpi = 300, bbox_inches='tight')
         pyplot.clf()
@@ -401,7 +410,7 @@ def generate_plot_comp_coeff(data_exp, data_num, outputdir, prefix):
 
         num_plot, = pyplot.plot(data_num[column_combo[0]], data_num[column_combo[1]], label = num_data_label, marker = "D", markersize = 4)
 
-        pyplot.legend(handles=[exp_plot_norm, exp_plot_hysteresis, num_plot], bbox_to_anchor=(1.05, 1), loc='upper left', framealpha=0.0)
+        pyplot.legend(handles=[exp_plot_norm, exp_plot_hysteresis, num_plot], bbox_to_anchor=(0, 0), loc='upper left', framealpha=0.0)
         pyplot.grid()
 
         #x_max = max(max(data_exp[column_combo[0]]), max(data_num[column_combo[0]]))
@@ -420,6 +429,8 @@ def generate_plot_comp_coeff(data_exp, data_num, outputdir, prefix):
             xlabel.set_horizontalalignment("left")
         for ylabel in ax.get_yticklabels():
             ylabel.set_verticalalignment("bottom")
+
+        ax.text(1.0, -0.05, r"Re = 6.5 $\cdot 10^6$", verticalalignment='top', horizontalalignment='right', transform=ax.transAxes)
 
         pyplot.savefig(os.path.join(outputdir, f"{prefix}_{column_names[column_combo[1]]}-{column_names[column_combo[0]]}.png"), transparent = True, dpi = 300, bbox_inches='tight')
         pyplot.clf()
@@ -469,7 +480,7 @@ def generate_plot_comp_2d3d_coeff(data_2d_exp, data_2d_num, data_3d_exp, data_3d
         num_plot_3d, = pyplot.plot(data_3d_num[column_combo[0]], data_3d_num[column_combo[1]], label = r"VLM Prediction", marker = "D", markersize = 4)
 
         #pyplot.legend(handles=[exp_plot_norm_2d, exp_plot_hysteresis_2d, num_plot_2d, exp_plot_norm_3d, exp_plot_hysteresis_3d, num_plot_3d], bbox_to_anchor=(1.05, 1), loc='upper left', framealpha=0.0)
-        pyplot.legend(handles=[exp_plot_norm_2d, num_plot_2d, exp_plot_norm_3d, num_plot_3d], bbox_to_anchor=(1.05, 1), loc='upper left', framealpha=0.0)
+        pyplot.legend(handles=[exp_plot_norm_2d, num_plot_2d, exp_plot_norm_3d, num_plot_3d], bbox_to_anchor=(0, 0), loc='upper left', framealpha=0.0)
         pyplot.grid()
 
         #x_max = max(max(data_exp[column_combo[0]]), max(data_num[column_combo[0]]))
@@ -489,6 +500,8 @@ def generate_plot_comp_2d3d_coeff(data_2d_exp, data_2d_num, data_3d_exp, data_3d
         for ylabel in ax.get_yticklabels():
             ylabel.set_verticalalignment("bottom")
 
+        ax.text(1.0, -0.05, r"Re = 6.5 $\cdot 10^6$", verticalalignment='top', horizontalalignment='right', transform=ax.transAxes)
+
         pyplot.savefig(os.path.join(outputdir, f"{prefix}_{column_names[column_combo[1]]}-{column_names[column_combo[0]]}.png"), transparent = True, dpi = 300, bbox_inches='tight')
         pyplot.clf()
 
@@ -497,12 +510,12 @@ def generate_plot_comp_2d3d_coeff(data_2d_exp, data_2d_num, data_3d_exp, data_3d
 
 
 
-windtunnel_folder = "D:\courses\windtunnel\AE2130-II G25"
+windtunnel_folder = r"D:\tud\courses\AE2130-II Low Speed Wind Tunnel Test\AE2130-II G25"
 
 start = timeit.default_timer()
 
 # Generate 2D plots
-generate_plot_thermal(os.path.join(windtunnel_folder, "2D", "experimental", "thermal"), os.path.join(windtunnel_folder, "plots", "2D", "experimental", "thermal"), "2D_thermal")
+#generate_plot_thermal(os.path.join(windtunnel_folder, "2D", "experimental", "thermal"), os.path.join(windtunnel_folder, "plots", "2D", "experimental", "thermal"), "2D_thermal")
 
 data_exp_cp_2d = generate_data_exp_cp(os.path.join(windtunnel_folder, "2D", "experimental", "cp_test.txt"))
 data_num_cp_2d = generate_data_num_cp(os.path.join(windtunnel_folder, "2D", "numerical", "cp"))
@@ -510,34 +523,34 @@ generate_plot_cp(data_exp_cp_2d, os.path.join(windtunnel_folder, "plots", "2D", 
 generate_plot_cp(data_num_cp_2d, os.path.join(windtunnel_folder, "plots", "2D", "numerical", "cp"), "2D_num_cp")
 generate_plot_comp_cp(data_exp_cp_2d, data_num_cp_2d, os.path.join(windtunnel_folder, "plots", "2D", "comparison", "cp"), "2D_comp_cp")
 
-data_exp_coeff_2d = generate_data_exp_coeff(os.path.join(windtunnel_folder, "2D", "experimental", "press_test.txt"))
-data_num_coeff_2d = generate_data_num_coeff(os.path.join(windtunnel_folder, "2D", "numerical", "NACA642A015_T1_Re0.646_M0.12_N9.0.txt"))
-generate_plot_coeff(data_exp_coeff_2d, os.path.join(windtunnel_folder, "plots", "2D", "experimental"), "2D_exp")
-generate_plot_coeff(data_num_coeff_2d, os.path.join(windtunnel_folder, "plots", "2D", "numerical"), "2D_num")
-generate_plot_comp_coeff(data_exp_coeff_2d, data_num_coeff_2d, os.path.join(windtunnel_folder, "plots", "2D", "comparison"), "2D_comp")
+#data_exp_coeff_2d = generate_data_exp_coeff(os.path.join(windtunnel_folder, "2D", "experimental", "press_test.txt"))
+#data_num_coeff_2d = generate_data_num_coeff(os.path.join(windtunnel_folder, "2D", "numerical", "NACA642A015_T1_Re0.646_M0.12_N9.0.txt"))
+#generate_plot_coeff(data_exp_coeff_2d, os.path.join(windtunnel_folder, "plots", "2D", "experimental"), "2D_exp")
+#generate_plot_coeff(data_num_coeff_2d, os.path.join(windtunnel_folder, "plots", "2D", "numerical"), "2D_num")
+#generate_plot_comp_coeff(data_exp_coeff_2d, data_num_coeff_2d, os.path.join(windtunnel_folder, "plots", "2D", "comparison"), "2D_comp")
 
 
 
 # Generate 3D plots
-generate_plot_thermal(os.path.join(windtunnel_folder, "3D", "experimental", "thermal"), os.path.join(windtunnel_folder, "plots", "3D", "experimental", "thermal"), "3D_thermal")
+#generate_plot_thermal(os.path.join(windtunnel_folder, "3D", "experimental", "thermal"), os.path.join(windtunnel_folder, "plots", "3D", "experimental", "thermal"), "3D_thermal")
 
 # 3D numerical pressure distribution is not done yet
-data_exp_cp_3d = generate_data_exp_cp(os.path.join(windtunnel_folder, "3D", "experimental", "cp_test.txt"))
-data_num_cp_3d = generate_data_num_cp(os.path.join(windtunnel_folder, "3D", "numerical", "cp"))
-generate_plot_cp(data_exp_cp_3d, os.path.join(windtunnel_folder, "plots", "3D", "experimental", "cp"), "3D_exp_cp")
-generate_plot_cp(data_num_cp_3d, os.path.join(windtunnel_folder, "plots", "3D", "numerical", "cp"), "3D_num_cp")
-generate_plot_comp_cp(data_exp_cp_3d, data_num_cp_3d, os.path.join(windtunnel_folder, "plots", "3D", "comparison", "cp"), "3D_comp_cp")
+#data_exp_cp_3d = generate_data_exp_cp(os.path.join(windtunnel_folder, "3D", "experimental", "cp_test.txt"))
+#data_num_cp_3d = generate_data_num_cp(os.path.join(windtunnel_folder, "3D", "numerical", "cp"))
+#generate_plot_cp(data_exp_cp_3d, os.path.join(windtunnel_folder, "plots", "3D", "experimental", "cp"), "3D_exp_cp")
+#generate_plot_cp(data_num_cp_3d, os.path.join(windtunnel_folder, "plots", "3D", "numerical", "cp"), "3D_num_cp")
+#generate_plot_comp_cp(data_exp_cp_3d, data_num_cp_3d, os.path.join(windtunnel_folder, "plots", "3D", "comparison", "cp"), "3D_comp_cp")
 
-data_exp_coeff_3d = generate_data_exp_coeff(os.path.join(windtunnel_folder, "3D", "experimental", "press_test.txt"))
-data_num_coeff_3d = generate_data_num_coeff(os.path.join(windtunnel_folder, "3D", "numerical", "NACA 642A015_T1_Re0.646_M0.12_N9.0.txt"))
-generate_plot_coeff(data_exp_coeff_3d, os.path.join(windtunnel_folder, "plots", "3D", "experimental"), "3D_exp")
-generate_plot_coeff(data_num_coeff_3d, os.path.join(windtunnel_folder, "plots", "3D", "numerical"), "3D_num")
-generate_plot_comp_coeff(data_exp_coeff_3d, data_num_coeff_3d, os.path.join(windtunnel_folder, "plots", "3D", "comparison"), "3D_comp")
+#data_exp_coeff_3d = generate_data_exp_coeff(os.path.join(windtunnel_folder, "3D", "experimental", "press_test.txt"))
+#data_num_coeff_3d = generate_data_num_coeff(os.path.join(windtunnel_folder, "3D", "numerical", "NACA 642A015_T1_Re0.646_M0.12_N9.0.txt"))
+#generate_plot_coeff(data_exp_coeff_3d, os.path.join(windtunnel_folder, "plots", "3D", "experimental"), "3D_exp")
+#generate_plot_coeff(data_num_coeff_3d, os.path.join(windtunnel_folder, "plots", "3D", "numerical"), "3D_num")
+#generate_plot_comp_coeff(data_exp_coeff_3d, data_num_coeff_3d, os.path.join(windtunnel_folder, "plots", "3D", "comparison"), "3D_comp")
 
 
 
 # Generate 2D - 3D comparison plots
-generate_plot_comp_2d3d_coeff(data_exp_coeff_2d, data_num_coeff_2d, data_exp_coeff_3d, data_num_coeff_3d, os.path.join(windtunnel_folder, "plots", "comparison"), "2D3D_comp")
+#generate_plot_comp_2d3d_coeff(data_exp_coeff_2d, data_num_coeff_2d, data_exp_coeff_3d, data_num_coeff_3d, os.path.join(windtunnel_folder, "plots", "comparison"), "2D3D_comp")
 
 
 
