@@ -68,9 +68,9 @@ def generate_plot_thermal(dir, outputdir, prefix):
             ax.xaxis.set_major_formatter(ticker.PercentFormatter(x_max - x_min))
             ax.xaxis.set_major_locator(ticker.LinearLocator(5))
             ax.set_xlim(left = 0)
-            ax.set_xlabel("c [-] \n Re = 6.5 $\cdot 10^6$")
+            ax.set_xlabel("c [-] \n Re = 6.5 $\cdot 10^5$")
         
-            #ax.text(0.0, -0.05, r"Re = 6.5 $\cdot 10^6$", verticalalignment='top', horizontalalignment='left', transform=ax.transAxes)
+            #ax.text(0.0, -0.05, r"Re = 6.5 $\cdot 10^5$", verticalalignment='top', horizontalalignment='left', transform=ax.transAxes)
 
             pyplot.savefig(os.path.join(outputdir, f"{prefix}_{os.path.basename(os.path.normpath(root))}_highrange.png"), transparent = True, dpi = 300, bbox_inches='tight')
             pyplot.clf()
@@ -84,9 +84,9 @@ def generate_plot_thermal(dir, outputdir, prefix):
             ax.xaxis.set_major_formatter(ticker.PercentFormatter(x_max - x_min))
             ax.xaxis.set_major_locator(ticker.LinearLocator(5))
             ax.set_xlim(left = 0)
-            ax.set_xlabel("c [-] \n Re = 6.5 $\cdot 10^6$")
+            ax.set_xlabel("c [-] \n Re = 6.5 $\cdot 10^5$")
             
-            #ax.text(0.0, -0.05, r"Re = 6.5 $\cdot 10^6$", verticalalignment='top', horizontalalignment='right', transform=ax.transAxes)
+            #ax.text(0.0, -0.05, r"Re = 6.5 $\cdot 10^5$", verticalalignment='top', horizontalalignment='right', transform=ax.transAxes)
 
             pyplot.savefig(os.path.join(outputdir, f"{prefix}_{os.path.basename(os.path.normpath(root))}_lowrange.png"), transparent = True, dpi = 300, bbox_inches='tight')
 
@@ -213,7 +213,7 @@ def generate_plot_cp(data, outputdir, prefix):
         for ylabel in ax.get_yticklabels():
             ylabel.set_verticalalignment("bottom")
 
-        ax.text(1.0, -0.05, r"Re = 6.5 $\cdot 10^6$", verticalalignment='top', horizontalalignment='right', transform=ax.transAxes)
+        ax.text(1.0, -0.05, r"Re = 6.5 $\cdot 10^5$", verticalalignment='top', horizontalalignment='right', transform=ax.transAxes)
 
         pyplot.savefig(os.path.join(outputdir, f"{prefix}_AoA{hysteresis_prefix}{round(float(data[dataset, is_exp].strip()),1)}.png"), transparent = True, dpi = 300, bbox_inches='tight')
         pyplot.clf()
@@ -272,7 +272,7 @@ def generate_plot_comp_cp(data_exp, data_num, outputdir, prefix):
         for ylabel in ax.get_yticklabels():
             ylabel.set_verticalalignment("bottom")
 
-        ax.text(1.0, -0.05, r"Re = 6.5 $\cdot 10^6$", verticalalignment='top', horizontalalignment='right', transform=ax.transAxes)
+        ax.text(1.0, -0.05, r"Re = 6.5 $\cdot 10^5$", verticalalignment='top', horizontalalignment='right', transform=ax.transAxes)
 
         pyplot.savefig(os.path.join(outputdir, f"{prefix}_AoA{round(float(data_num[dataset, 0].strip()),1)}.png"), transparent = True, dpi = 300, bbox_inches='tight')
         pyplot.clf()
@@ -371,7 +371,7 @@ def generate_plot_coeff(data, outputdir, prefix):
         for ylabel in ax.get_yticklabels():
             ylabel.set_verticalalignment("bottom")
 
-        ax.text(1.0, -0.05, r"Re = 6.5 $\cdot 10^6$", verticalalignment='top', horizontalalignment='right', transform=ax.transAxes)
+        ax.text(1.0, -0.05, r"Re = 6.5 $\cdot 10^5$", verticalalignment='top', horizontalalignment='right', transform=ax.transAxes)
 
         pyplot.savefig(os.path.join(outputdir, f"{prefix}_{column_names[column_combo[1]]}-{column_names[column_combo[0]]}.png"), transparent = True, dpi = 300, bbox_inches='tight')
         pyplot.clf()
@@ -430,7 +430,7 @@ def generate_plot_comp_coeff(data_exp, data_num, outputdir, prefix):
         for ylabel in ax.get_yticklabels():
             ylabel.set_verticalalignment("bottom")
 
-        ax.text(1.0, -0.05, r"Re = 6.5 $\cdot 10^6$", verticalalignment='top', horizontalalignment='right', transform=ax.transAxes)
+        ax.text(1.0, -0.05, r"Re = 6.5 $\cdot 10^5$", verticalalignment='top', horizontalalignment='right', transform=ax.transAxes)
 
         pyplot.savefig(os.path.join(outputdir, f"{prefix}_{column_names[column_combo[1]]}-{column_names[column_combo[0]]}.png"), transparent = True, dpi = 300, bbox_inches='tight')
         pyplot.clf()
@@ -500,7 +500,7 @@ def generate_plot_comp_2d3d_coeff(data_2d_exp, data_2d_num, data_3d_exp, data_3d
         for ylabel in ax.get_yticklabels():
             ylabel.set_verticalalignment("bottom")
 
-        ax.text(1.0, -0.05, r"Re = 6.5 $\cdot 10^6$", verticalalignment='top', horizontalalignment='right', transform=ax.transAxes)
+        ax.text(1.0, -0.05, r"Re = 6.5 $\cdot 10^5$", verticalalignment='top', horizontalalignment='right', transform=ax.transAxes)
 
         pyplot.savefig(os.path.join(outputdir, f"{prefix}_{column_names[column_combo[1]]}-{column_names[column_combo[0]]}.png"), transparent = True, dpi = 300, bbox_inches='tight')
         pyplot.clf()
@@ -515,7 +515,7 @@ windtunnel_folder = r"D:\tud\courses\AE2130-II Low Speed Wind Tunnel Test\AE2130
 start = timeit.default_timer()
 
 # Generate 2D plots
-#generate_plot_thermal(os.path.join(windtunnel_folder, "2D", "experimental", "thermal"), os.path.join(windtunnel_folder, "plots", "2D", "experimental", "thermal"), "2D_thermal")
+generate_plot_thermal(os.path.join(windtunnel_folder, "2D", "experimental", "thermal"), os.path.join(windtunnel_folder, "plots", "2D", "experimental", "thermal"), "2D_thermal")
 
 data_exp_cp_2d = generate_data_exp_cp(os.path.join(windtunnel_folder, "2D", "experimental", "cp_test.txt"))
 data_num_cp_2d = generate_data_num_cp(os.path.join(windtunnel_folder, "2D", "numerical", "cp"))
@@ -523,34 +523,34 @@ generate_plot_cp(data_exp_cp_2d, os.path.join(windtunnel_folder, "plots", "2D", 
 generate_plot_cp(data_num_cp_2d, os.path.join(windtunnel_folder, "plots", "2D", "numerical", "cp"), "2D_num_cp")
 generate_plot_comp_cp(data_exp_cp_2d, data_num_cp_2d, os.path.join(windtunnel_folder, "plots", "2D", "comparison", "cp"), "2D_comp_cp")
 
-#data_exp_coeff_2d = generate_data_exp_coeff(os.path.join(windtunnel_folder, "2D", "experimental", "press_test.txt"))
-#data_num_coeff_2d = generate_data_num_coeff(os.path.join(windtunnel_folder, "2D", "numerical", "NACA642A015_T1_Re0.646_M0.12_N9.0.txt"))
-#generate_plot_coeff(data_exp_coeff_2d, os.path.join(windtunnel_folder, "plots", "2D", "experimental"), "2D_exp")
-#generate_plot_coeff(data_num_coeff_2d, os.path.join(windtunnel_folder, "plots", "2D", "numerical"), "2D_num")
-#generate_plot_comp_coeff(data_exp_coeff_2d, data_num_coeff_2d, os.path.join(windtunnel_folder, "plots", "2D", "comparison"), "2D_comp")
+data_exp_coeff_2d = generate_data_exp_coeff(os.path.join(windtunnel_folder, "2D", "experimental", "press_test.txt"))
+data_num_coeff_2d = generate_data_num_coeff(os.path.join(windtunnel_folder, "2D", "numerical", "NACA 642A015_T1_Re0.647_M0.12_N9.0.txt"))
+generate_plot_coeff(data_exp_coeff_2d, os.path.join(windtunnel_folder, "plots", "2D", "experimental"), "2D_exp")
+generate_plot_coeff(data_num_coeff_2d, os.path.join(windtunnel_folder, "plots", "2D", "numerical"), "2D_num")
+generate_plot_comp_coeff(data_exp_coeff_2d, data_num_coeff_2d, os.path.join(windtunnel_folder, "plots", "2D", "comparison"), "2D_comp")
 
 
 
 # Generate 3D plots
-#generate_plot_thermal(os.path.join(windtunnel_folder, "3D", "experimental", "thermal"), os.path.join(windtunnel_folder, "plots", "3D", "experimental", "thermal"), "3D_thermal")
+generate_plot_thermal(os.path.join(windtunnel_folder, "3D", "experimental", "thermal"), os.path.join(windtunnel_folder, "plots", "3D", "experimental", "thermal"), "3D_thermal")
 
 # 3D numerical pressure distribution is not done yet
-#data_exp_cp_3d = generate_data_exp_cp(os.path.join(windtunnel_folder, "3D", "experimental", "cp_test.txt"))
-#data_num_cp_3d = generate_data_num_cp(os.path.join(windtunnel_folder, "3D", "numerical", "cp"))
-#generate_plot_cp(data_exp_cp_3d, os.path.join(windtunnel_folder, "plots", "3D", "experimental", "cp"), "3D_exp_cp")
-#generate_plot_cp(data_num_cp_3d, os.path.join(windtunnel_folder, "plots", "3D", "numerical", "cp"), "3D_num_cp")
-#generate_plot_comp_cp(data_exp_cp_3d, data_num_cp_3d, os.path.join(windtunnel_folder, "plots", "3D", "comparison", "cp"), "3D_comp_cp")
+data_exp_cp_3d = generate_data_exp_cp(os.path.join(windtunnel_folder, "3D", "experimental", "cp_test.txt"))
+data_num_cp_3d = generate_data_num_cp(os.path.join(windtunnel_folder, "3D", "numerical", "cp"))
+generate_plot_cp(data_exp_cp_3d, os.path.join(windtunnel_folder, "plots", "3D", "experimental", "cp"), "3D_exp_cp")
+generate_plot_cp(data_num_cp_3d, os.path.join(windtunnel_folder, "plots", "3D", "numerical", "cp"), "3D_num_cp")
+generate_plot_comp_cp(data_exp_cp_3d, data_num_cp_3d, os.path.join(windtunnel_folder, "plots", "3D", "comparison", "cp"), "3D_comp_cp")
 
-#data_exp_coeff_3d = generate_data_exp_coeff(os.path.join(windtunnel_folder, "3D", "experimental", "press_test.txt"))
-#data_num_coeff_3d = generate_data_num_coeff(os.path.join(windtunnel_folder, "3D", "numerical", "NACA 642A015_T1_Re0.646_M0.12_N9.0.txt"))
-#generate_plot_coeff(data_exp_coeff_3d, os.path.join(windtunnel_folder, "plots", "3D", "experimental"), "3D_exp")
-#generate_plot_coeff(data_num_coeff_3d, os.path.join(windtunnel_folder, "plots", "3D", "numerical"), "3D_num")
-#generate_plot_comp_coeff(data_exp_coeff_3d, data_num_coeff_3d, os.path.join(windtunnel_folder, "plots", "3D", "comparison"), "3D_comp")
+data_exp_coeff_3d = generate_data_exp_coeff(os.path.join(windtunnel_folder, "3D", "experimental", "press_test.txt"))
+data_num_coeff_3d = generate_data_num_coeff(os.path.join(windtunnel_folder, "3D", "numerical", "NACA 642A015_T1_Re0.646_M0.12_N9.0.txt"))
+generate_plot_coeff(data_exp_coeff_3d, os.path.join(windtunnel_folder, "plots", "3D", "experimental"), "3D_exp")
+generate_plot_coeff(data_num_coeff_3d, os.path.join(windtunnel_folder, "plots", "3D", "numerical"), "3D_num")
+generate_plot_comp_coeff(data_exp_coeff_3d, data_num_coeff_3d, os.path.join(windtunnel_folder, "plots", "3D", "comparison"), "3D_comp")
 
 
 
 # Generate 2D - 3D comparison plots
-#generate_plot_comp_2d3d_coeff(data_exp_coeff_2d, data_num_coeff_2d, data_exp_coeff_3d, data_num_coeff_3d, os.path.join(windtunnel_folder, "plots", "comparison"), "2D3D_comp")
+generate_plot_comp_2d3d_coeff(data_exp_coeff_2d, data_num_coeff_2d, data_exp_coeff_3d, data_num_coeff_3d, os.path.join(windtunnel_folder, "plots", "comparison"), "2D3D_comp")
 
 
 
